@@ -3,7 +3,7 @@
   | Source Code Aplikasi Rental Mobil PHP & MySQL
   | 
   | @package   : rental_mobil
-  | @file	     : booking.php 
+  | @file	   : bookinh.php 
   | @author    : fauzan1892 / Fauzan Falah
   | @copyright : Copyright (c) 2017-2021 Codekop.com (https://www.codekop.com)
   | @blog      : https://www.codekop.com/products/source-code-aplikasi-rental-mobil-php-mysql-7.html 
@@ -12,93 +12,69 @@
   | 
   | 
  */
-    session_start();
-    require 'koneksi/koneksi.php';
-    include 'header.php';
+    require '../../koneksi/koneksi.php';
+    $title_web = 'Daftar Booking';
+    include '../header.php';
     if(empty($_SESSION['USER']))
     {
-        echo '<script>alert("Harap login !");window.location="index.php"</script>';
+        session_start();
     }
-    $id = $_GET['id'];
-    $isi = $koneksi->query("SELECT * FROM mobil WHERE id_mobil = '$id'")->fetch();
+    if(!empty($_GET['id'])){
+        $id = strip_tags($_GET['id']);
+        $sql = "SELECT mobil.merk, booking.* FROM booking JOIN mobil ON 
+                booking.id_mobil=mobil.id_mobil WHERE id_login = '$id' ORDER BY id_booking DESC";
+    }else{
+        $sql = "SELECT mobil.merk, booking.* FROM booking JOIN mobil ON 
+                booking.id_mobil=mobil.id_mobil ORDER BY id_booking DESC";
+    }
+    $hasil = $koneksi->query($sql)->fetchAll();
 ?>
-<br>
+
 <br>
 <div class="container">
-<div class="row">
-    <div class="col-sm-4">
-        <div class="card">
-            <img src="assets/image/<?php echo $isi['gambar'];?>" class="card-img-top" style="height:200px;">
-            <div class="card-body" style="background:#ddd">
-            <h5 class="card-title"><?php echo $isi['merk'];?></h5>
+    <div class="card">
+        <div class="card-header text-white bg-primary">
+            <h5 class="card-title">
+            Daftar Booking
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered table-sm">
+                    <thead>
+                        <tr>
+                            <th>No. </th>
+                            <th>Kode Booking</th>
+                            <th>Merk Mobil</th>
+                            <th>Nama </th>
+                            <th>Tanggal Sewa </th>
+                            <th>Lama Sewa </th>
+                            <th>Total Harga</th>
+                            <th>Konfirmasi</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php  $no=1; foreach($hasil as $isi){?>
+                        <tr>
+                            <td><?php echo $no;?></td>
+                            <td><?= $isi['kode_booking'];?></td>
+                            <td><?= $isi['merk'];?></td>
+                            <td><?= $isi['nama'];?></td>
+                            <td><?= $isi['tanggal'];?></td>
+                            <td><?= $isi['lama_sewa'];?> hari</td>
+                            <td>Rp. <?= number_format($isi['total_harga']);?></td>
+                            <td><?= $isi['konfirmasi_pembayaran'];?></td>
+                            <td>
+                                <a class="btn btn-primary" href="bayar.php?id=<?= $isi['kode_booking'];?>" 
+                                role="button">Detail</a>   
+                            </td>
+                        </tr>
+                        <?php $no++;}?>
+                    </tbody>
+                </table>
             </div>
-            <ul class="list-group list-group-flush">
-
-            <?php if($isi['status'] == 'Tersedia'){?>
-                <li class="list-group-item bg-primary text-white">
-                    <i class="fa fa-check"></i> Available
-                </li>
-            <?php }else{?>
-                <li class="list-group-item bg-danger text-white">
-                    <i class="fa fa-close"></i> Not Available
-                </li>
-            <?php }?>
-            <li class="list-group-item bg-info text-white"><i class="fa fa-check"></i> Free E-toll 50k</li>
-            <li class="list-group-item bg-dark text-white">
-                <i class="fa fa-money"></i> Rp. <?php echo number_format($isi['harga']);?>/ day
-            </li>
-            </ul>
         </div>
     </div>
-    <div class="col-sm-8">
-         <div class="card">
-           <div class="card-body">
-               <form method="post" action="koneksi/proses.php?id=booking">
-                    <div class="form-group">
-                      <label for="">KTP</label>
-                      <input type="text" name="ktp" id="" required class="form-control" placeholder="KTP / NIK Anda">
-                    </div> 
-                    <div class="form-group">
-                      <label for="">Nama</label>
-                      <input type="text" name="nama" id="" required class="form-control" placeholder="Nama Anda">
-                    </div> 
-                    <div class="form-group">
-                      <label for="">Alamat</label>
-                      <input type="text" name="alamat" id="" required class="form-control" placeholder="Alamat">
-                    </div> 
-                    <div class="form-group">
-                      <label for="">Telepon</label>
-                      <input type="text" name="no_tlp" id="" required class="form-control" placeholder="Telepon">
-                    </div> 
-                    <div class="form-group">
-                      <label for="">Tanggal Sewa</label>
-                      <input type="date" name="tanggal" id="" required class="form-control" placeholder="Nama Anda">
-                    </div> 
-                    <div class="form-group">
-                      <label for="">Lama Sewa</label>
-                      <input type="number" name="lama_sewa" id="" required class="form-control" placeholder="Lama Sewa">
-                    </div> 
-                    <input type="hidden" value="<?php echo $_SESSION['USER']['id_login'];?>" name="id_login">
-                    <input type="hidden" value="<?php echo $isi['id_mobil'];?>" name="id_mobil">
-                    <input type="hidden" value="<?php echo $isi['harga'];?>" name="total_harga">
-                    <hr/>
-                    <?php if($isi['status'] == 'Tersedia'){?>
-                        <button type="submit" class="btn btn-primary float-right">Booking Now</button>
-                    <?php }else{?>
-                        <button type="submit" class="btn btn-danger float-right" disabled>Booking Now</button>
-                    <?php }?>
-               </form>
-           </div>
-         </div> 
-    </div>
 </div>
-</div>
-
-<br>
-
-<br>
-
-<br>
-
-
-<?php include 'footer.php';?>
+<?php  include '../footer.php';?>
